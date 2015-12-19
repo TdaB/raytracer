@@ -23,6 +23,7 @@ public:
 	Point(double x, double y, double z);
 	void print();
 	double mag();
+	double distance(Point p);
 	Point unitize();
 	double dot(Point p);
 	Point cross(Point p);
@@ -48,12 +49,13 @@ public:
 	Point center;
 	double radius;
 	Color color;
-	double k_ambient, k_diffuse, k_specular;
+	double k_ambient, k_diffuse, k_specular, k_reflective, n_refractive;
 	int n_specular;
 	Sphere();
 	Sphere(
 		Point my_center, double my_radius, Color my_color,
-		double k_ambient, double k_diffuse, double k_specular, int n_specular
+		double k_ambient, double k_diffuse, double k_specular,
+		double k_reflective, int n_specular, double n_refractive
 	);
 	Point unit_normal(Point p);
 };

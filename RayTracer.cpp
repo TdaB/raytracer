@@ -1,85 +1,101 @@
 #include "Dependencies\glew\glew.h"
 #include "Dependencies\freeglut\freeglut.h"
 #include <iostream>
-#include <algorithm>
+#include <limits>
+#include <ctime>
 #include "objects.h"
 #include "utils.h"
 
-#define WIDTH 200
+#define WIDTH 800
 #define HEIGHT 600
 
 using namespace std;
 
 
-void render_pixel(int x, int y, Color c) {
+void render_pixel(int x, int y, Color c)
+{
 	glBegin(GL_POINTS);
 	glColor3d(c.r, c.g, c.b);
 	glVertex2i(x, y);
 	glEnd();
+	//glFlush();
 }
 
-Color trace(Point origin, Point p, Sphere * spheres, Light * lights) {
-	Color fill(0, 0, 0);
-	for (int i = 0; i < 2; i++) {
-		Sphere s = spheres[i];
-		Point intersection = ray_sphere_intersect(origin, p, s);
-
-		if (intersection.z > 0) {
-			Color ambient = s.color * s.k_ambient;
-			Color diffuse;
-			Color specular;
-			Point N = s.unit_normal(intersection);
-			Point V = (origin - intersection).unitize();
-			for (int j = 0; j < 2; j++) {
-				Light light = lights[j];
-				Point L = (light.position - intersection).unitize();
-				Point H = (V + L).unitize();
-				Point R = N * 2 * N.dot(L) - L;
-
-				// Check to see if intersection point is blocked from light
-				bool blocked = false;
-				for (int k = 0; k < 2; k++) {
-					Point shadow = ray_sphere_intersect(intersection, light.position, spheres[k]);
-					if (shadow.z > 0) {
-						blocked = true;
-						break;
-					}
-				}
-				if (!blocked) {
-					diffuse = diffuse + s.color * s.k_diffuse * N.dot(L);
-					specular = specular + light.color * s.k_specular * pow(N.dot(H), s.n_specular);
-				}						
-			}
-			fill = ambient + diffuse + specular;
-		}
-	}
-	return fill;
-
+void draw_line(Point p1, Point p2) {
+	glColor3d(1.0, 1.0, 1.0);
+	glBegin(GL_LINES);
+	glVertex2i(p1.x, p1.y);
+	glVertex2i(p2.x, p2.y);
+	glEnd();
 }
 
-
-void render_scene()
+void render_scene(Point camera, Sphere * spheres, int num_spheres, Light * lights, int num_lights)
 {
-	Point camera = Point(0, 0, -800);
+	clock_t begin = clock();
 
-	Light lights[] = {
-		Light(Point(50, 1000, 0), Color(1, 1, 1)),
-		Light(Point(0, 1000, 200), Color(1, 1, 1))
-	};
 
-	Sphere spheres[] = {
-		Sphere(Point(0, 100, 200), 70, Color(1, 0, 0), .05, .5, .5, 40),
-		Sphere(Point(0, -100, 200), 100, Color(0, 1, 1), .05, .5, .5, 12)
-	};
-	
+	// Main loop
 	for (int x = -WIDTH / 2; x < WIDTH / 2; x++) {
 		for (int y = -HEIGHT / 2; y < HEIGHT / 2; y++) {
 			Point pixel = Point(x, y, 0);
-			Color fill = trace(camera, pixel, spheres, lights);
+			Color fill = trace(camera, pixel, spheres, num_spheres, lights, num_lights, 15);
 			render_pixel(x, y, fill);
 		}
 	}
 	glFlush();
+
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+	cout << "RENDERING TIME: " << elapsed_secs << " SECONDS";
+}
+
+
+//void scene1()
+//{
+//	int num_lights = 3;
+//	int num_spheres = 4;
+//	Point camera = Point(0, 0, -800);
+//
+//	Light lights[] = {
+//		Light(Point(0, 1000, 400), Color(1, 1, 1)),
+//		Light(Point(-300, 1000, 300), Color(1, 1, 1)),
+//		Light(Point(0, 0, 150), Color(1, 1, 1))
+//	};
+//
+//	Sphere spheres[] = {
+//		Sphere(Point(-200, -150, 100), 80, Color(1, 0, 0), .05, .5, .5, .9, 40, 0),
+//		Sphere(Point(200, -150, 100), 80, Color(.2, .7, .4), .05, .5, .5, .9, 12, 0),
+//		Sphere(Point(-200, 300, 300), 80, Color(.2, .4, .5), .05, .5, .5, .9, 12, 0),
+//		Sphere(Point(0, 0, 400), 200, Color(1, 1, 0), .05, .4, .1, .3, 40, 0)
+//	};
+//	render_scene(camera, spheres, num_spheres, lights, num_lights);
+//}
+
+void scene2()
+{
+	int num_lights = 3;
+	int num_spheres = 9;
+	Point camera = Point(0, 0, -800);
+
+	Light lights[] = {
+		Light(Point(0, 0, 0), Color(1, 1, 1)),
+		Light(Point(-300, 0, 500), Color(1, 1, 1)),
+		Light(Point(500, 0, 420), Color(1, 1, 1))
+	};
+
+	Sphere spheres[] = {
+		Sphere(Point(-100, -100, 220), 100, Color(1, 0, 0), .05, .5, .5, .9, 40, 3),
+		Sphere(Point(100, -100, 220), 100, Color(1, 0, 0), .05, .5, .5, .9, 40, 2),
+		Sphere(Point(-100, 100, 220), 100, Color(1, 0, 0), .05, .5, .5, .9, 40, 1.1),
+		Sphere(Point(100, 100, 320), 100, Color(1, 0, 0), .05, .5, .5, .9, 40, 1.5),
+		Sphere(Point(150, 0, 430), 100, Color(1, 0, 0), .05, .5, .5, .9, 40, 1.5),
+
+		Sphere(Point(200, -150, 350), 80, Color(.2, .7, .4), .05, .5, .5, .9, 12, 0),
+		Sphere(Point(-110, 130, 250), 80, Color(.2, .4, .5), .05, .5, .5, .9, 12, 0),
+		Sphere(Point(-100, 0, 430), 100, Color(1, 0, 0), .05, .5, .5, .7, 50, 0),
+		Sphere(Point(0, 100, 1600), 1000, Color(1, 1, 0), .05, .4, .1, 0, 40, 0)
+	};
+	render_scene(camera, spheres, num_spheres, lights, num_lights);
 }
 
 int main(int argc, char **argv)
@@ -97,9 +113,7 @@ int main(int argc, char **argv)
 	gluOrtho2D(-WIDTH / 2.0, WIDTH / 2.0, -HEIGHT / 2.0, HEIGHT / 2.0);
 	// 2 days of my life gone from this damn option
 	glViewport(0, 0, WIDTH, HEIGHT);
-
-	// register callbacks
-	glutDisplayFunc(render_scene);
+	glutDisplayFunc(scene2);
 	glutMainLoop();
 
 	return 0;

@@ -10,9 +10,9 @@ Color::Color()
 
 Color::Color(double r1, double g1, double b1)
 {
-	r = r1;
-	g = g1;
-	b = b1;
+	this->r = r1;
+	this->g = g1;
+	this->b = b1;
 }
 
 void Color::print() {
@@ -45,9 +45,9 @@ Point::Point()
 
 Point::Point(double x1, double y1, double z1)
 {
-	x = x1;
-	y = y1;
-	z = z1;
+	this->x = x1;
+	this->y = y1;
+	this->z = z1;
 }
 
 void Point::print() {
@@ -59,6 +59,11 @@ double Point::mag()
 	return sqrt(this->x*this->x + this->y*this->y + this->z*this->z);
 }
 
+double Point::distance(Point p)
+{
+	return sqrt((this->x - p.x) * (this->x - p.x) + (this->y - p.y) * (this->y - p.y) + (this->z - p.z) * (this->z - p.z));
+}
+
 Point Point::unitize()
 {
 	double m = this->mag();
@@ -67,9 +72,7 @@ Point Point::unitize()
 
 double Point::dot(Point p)
 {
-	double answer = this->x*p.x + this->y*p.y + this->z*p.z;
-	if (answer < 0) return 0;
-	return answer;
+	return this->x*p.x + this->y*p.y + this->z*p.z;
 }
 
 Point Point::cross(Point p)
@@ -120,12 +123,13 @@ Sphere::Sphere()
 	this->center = Point();
 	this->radius = 0;
 	this->color = Color();
-	this->k_ambient = this->k_diffuse = this->k_specular = this->n_specular = 0;
+	this->k_ambient = this->k_diffuse = this->k_specular = this->k_reflective = this->n_specular = this->n_refractive = 0;
 }
 
 Sphere::Sphere(
 	Point my_center, double my_radius, Color my_color, 
-	double k_ambient, double k_diffuse, double k_specular, int n_specular)
+	double k_ambient, double k_diffuse, double k_specular,
+	double k_reflective, int n_specular, double n_refractive)
 {
 	this->center = my_center;
 	this->radius = my_radius;
@@ -133,7 +137,9 @@ Sphere::Sphere(
 	this->k_ambient = k_ambient;
 	this->k_diffuse = k_diffuse;
 	this->k_specular = k_specular;
+	this->k_reflective = k_reflective;
 	this->n_specular = n_specular;
+	this->n_refractive = n_refractive;
 }
 
 Point Sphere::unit_normal(Point p) {
