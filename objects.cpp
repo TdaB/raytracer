@@ -151,10 +151,11 @@ Point Sphere::unit_normal(Point p) {
 	);
 }
 
-Scene::Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights) {
+Scene::Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights, int bounces) {
     this->width = width;
     this->height = height;
     this->camera = camera;
     this->spheres = spheres;
     this->lights = lights;
+    this->bounces = bounces;
 }

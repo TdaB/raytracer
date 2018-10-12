@@ -1,6 +1,9 @@
 #ifndef UTILS_H 
 #define UTILS_H
+
 #include "objects.h"
+#include <vector>
+
 
 Point ray_sphere_intersect(Point p0, Point p1, Sphere s);
 
@@ -10,8 +13,8 @@ Point refract(Point origin, Point intersection, Point normal, double n1, double 
 
 double reflectance(Point origin, Point intersection, Point normal, double n1, double n2);
 
-Color handle_clear(Point origin, Point intersection, Sphere s);
+Color trace_transparent(Point origin, Point intersection, Sphere s, vector<Sphere> spheres, vector<Light> lights, int bounces_left);
 
-Color trace(Point origin, Point p, Sphere * spheres, int num_spheres, Light * lights, int num_lights, int depth);
+Color trace(Point origin, Point p, vector<Sphere> spheres, vector<Light> lights, int bounces);
 
 #endif

@@ -18,7 +18,6 @@ public:
 	bool operator != (const Color &c);
 };
 
-
 class Point
 {
 public:
@@ -72,8 +71,8 @@ public:
     Point camera;
     vector<Sphere> spheres;
     vector<Light> lights;
-    Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights);
+    int bounces;
+    Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights, int bounces);
 };
-
 
 #endif
