@@ -1,5 +1,6 @@
 #include <math.h>
 #include <iostream>
+#include <vector>
 #include "objects.h"
 
 
@@ -148,4 +149,12 @@ Point Sphere::unit_normal(Point p) {
 		(p.y - this->center.y) / this->radius,
 		(p.z - this->center.z) / this->radius
 	);
+}
+
+Scene::Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights) {
+    this->width = width;
+    this->height = height;
+    this->camera = camera;
+    this->spheres = spheres;
+    this->lights = lights;
 }

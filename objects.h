@@ -1,6 +1,10 @@
 #ifndef OBJECTS_H 
 #define OBJECTS_H
 
+#include <vector>
+
+using namespace std;
+
 class Color
 {
 public:
@@ -60,7 +64,16 @@ public:
 	Point unit_normal(Point p);
 };
 
-
+class Scene
+{
+public:
+    int width;
+    int height;
+    Point camera;
+    vector<Sphere> spheres;
+    vector<Light> lights;
+    Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights);
+};
 
 
 #endif

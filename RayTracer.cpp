@@ -29,10 +29,8 @@ void draw_line(Point p1, Point p2) {
 	glEnd();
 }
 
-void render_scene(Point camera, Sphere * spheres, int num_spheres, Light * lights, int num_lights)
-{
+void render_scene(Point camera, Sphere * spheres, int num_spheres, Light * lights, int num_lights) {
 	clock_t begin = clock();
-
 
 	// Main loop
 	for (int x = -WIDTH / 2; x < WIDTH / 2; x++) {
@@ -118,3 +116,4 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
