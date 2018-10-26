@@ -1,9 +1,9 @@
 #ifndef OBJECTS_H 
 #define OBJECTS_H
-
 #include <vector>
 
 using namespace std;
+
 
 class Color
 {
@@ -39,7 +39,6 @@ public:
 class Light
 {
 public:
-	
 	Point position;
 	Color color;
 	Light();
@@ -56,7 +55,7 @@ public:
 	int n_specular;
 	Sphere();
 	Sphere(
-		Point my_center, double my_radius, Color my_color,
+		Point center, double radius, Color color,
 		double k_ambient, double k_diffuse, double k_specular,
 		double k_reflective, int n_specular, double n_refractive
 	);
@@ -68,11 +67,12 @@ class Scene
 public:
     int width;
     int height;
-    Point camera;
+    int camera_z;
     vector<Sphere> spheres;
     vector<Light> lights;
     int bounces;
-    Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights, int bounces);
+	Scene();
+    Scene(int width, int height, int camera_z, vector<Sphere> spheres, vector<Light> lights, int bounces);
 };
 
 #endif

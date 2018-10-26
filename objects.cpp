@@ -37,8 +37,6 @@ bool Color::operator != (const Color &c) {
 	return !(this->r == c.r && this->g == c.g && this->b == c.b);
 }
 
-
-
 Point::Point() 
 {
 	this->x = this->y = this->z = 0;
@@ -105,7 +103,6 @@ bool Point::operator == (const Point &p)
 	return this->x == p.x && this->y == p.y && this->z == p.z;
 }
 
-
 Light::Light() 
 {
 	this->position = Point();
@@ -118,23 +115,23 @@ Light::Light(Point p, Color c)
 	this->color = c;
 }
 
-
 Sphere::Sphere()
 {
 	this->center = Point();
 	this->radius = 0;
 	this->color = Color();
-	this->k_ambient = this->k_diffuse = this->k_specular = this->k_reflective = this->n_specular = this->n_refractive = 0;
+	this->k_ambient = this->k_diffuse = this->k_specular = this->k_reflective = this->n_refractive = 0.0;
+	this->n_specular = 0;
 }
 
 Sphere::Sphere(
-	Point my_center, double my_radius, Color my_color, 
+	Point center, double radius, Color color, 
 	double k_ambient, double k_diffuse, double k_specular,
 	double k_reflective, int n_specular, double n_refractive)
 {
-	this->center = my_center;
-	this->radius = my_radius;
-	this->color = my_color;
+	this->center = center;
+	this->radius = radius;
+	this->color = color;
 	this->k_ambient = k_ambient;
 	this->k_diffuse = k_diffuse;
 	this->k_specular = k_specular;
@@ -151,10 +148,13 @@ Point Sphere::unit_normal(Point p) {
 	);
 }
 
-Scene::Scene(int width, int height, Point camera, vector<Sphere> spheres, vector<Light> lights, int bounces) {
+Scene::Scene() {
+}
+
+Scene::Scene(int width, int height, int camera_z, vector<Sphere> spheres, vector<Light> lights, int bounces) {
     this->width = width;
     this->height = height;
-    this->camera = camera;
+    this->camera_z = camera_z;
     this->spheres = spheres;
     this->lights = lights;
     this->bounces = bounces;
