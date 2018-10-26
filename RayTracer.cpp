@@ -1,12 +1,14 @@
 #include <math.h>
 #include <iostream>
-#include "utils.h"
-#include "objects.h"
+#include <ctime>
+#include "raytracer.h"
+#include "main.h"
 
 #define EPSILON .00001 // floating point error compensation
 
 
 Raytracer::Raytracer(Scene s) {
+	this->scene = s;
     this->spheres = s.spheres;
     this->lights = s.lights;
 }
@@ -48,11 +50,10 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
     Point R = reflect(origin, closest_p, N);
     
     for (Light light : this->lights) {
+		// Check each light to see if intersection point is blocked from light
         Point L = (light.position - closest_p).unitize();
         Point H = (V + L).unitize();
         double d_light = (light.position - closest_p).mag();
-        
-        // Check to see if intersection point is blocked from light
         bool is_blocked = false;
         for (Sphere s : this->spheres) {
             Point shadow = ray_sphere_intersect(closest_p, light.position, s);
@@ -87,7 +88,7 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
     return ambient + diffuse + specular + reflective;
 }
 
-Color trace_transparent(Point origin, Point intersection, Sphere s, int bounces_left) {
+Color Raytracer::trace_transparent(Point origin, Point intersection, Sphere s, int bounces_left) {
     Point normal = s.unit_normal(intersection);
     Point incident = (intersection - origin).unitize();
     Point reflected;
@@ -95,16 +96,16 @@ Color trace_transparent(Point origin, Point intersection, Sphere s, int bounces_
     double refl;
     if (incident.dot(normal) > EPSILON) { // Are we inside a sphere?
         normal = normal * -1.0;
-        refl = reflectance(origin, intersection, normal, closest_s.n_refractive, 1);
+        refl = reflectance(origin, intersection, normal, s.n_refractive, 1);
         reflected = reflect(origin, intersection, normal);
-        refracted = refract(origin, intersection, normal, closest_s.n_refractive, 1);
+        refracted = refract(origin, intersection, normal, s.n_refractive, 1);
     } else {
-        refl = reflectance(origin, intersection, normal, 1, closest_s.n_refractive);
+        refl = reflectance(origin, intersection, normal, 1, s.n_refractive);
         reflected = reflect(origin, intersection, normal);
-        refracted = refract(origin, intersection, normal, 1, closest_s.n_refractive);
+        refracted = refract(origin, intersection, normal, 1, s.n_refractive);
     }
     if (refl < EPSILON) { // refl == 0
-        return trace(intersection, intersection + refracted, --bounces_left);
+		return trace(intersection, intersection + refracted, --bounces_left);
     } else if (refl > 1.0 - EPSILON) { // refl == 1
         return trace(intersection, intersection + reflected, --bounces_left);
     } else {
@@ -113,7 +114,7 @@ Color trace_transparent(Point origin, Point intersection, Sphere s, int bounces_
     }
 }
 
-Point ray_sphere_intersect(Point p0, Point p1, Sphere s) {
+Point Raytracer::ray_sphere_intersect(Point p0, Point p1, Sphere s) {
 	Point center = s.center;
 
 	double dx = p1.x - p0.x;
@@ -149,13 +150,13 @@ Point ray_sphere_intersect(Point p0, Point p1, Sphere s) {
 	return Point(p0.x + t * dx, p0.y + t * dy, p0.z + t * dz);
 }
 
-Point reflect(Point origin, Point intersection, Point normal) {
+Point Raytracer::reflect(Point origin, Point intersection, Point normal) {
 	Point I = (intersection - origin).unitize();
 	double cos_i = normal.dot(I * -1.0);
 	return I + normal * 2 * cos_i;
 }
 
-Point refract(Point origin, Point intersection, Point normal, double n1, double n2) {
+Point Raytracer::refract(Point origin, Point intersection, Point normal, double n1, double n2) {
 	Point I = (intersection - origin).unitize();
 	double n = n1 / n2;
 	double cos_i = normal.dot(I * -1.0);
@@ -167,7 +168,7 @@ Point refract(Point origin, Point intersection, Point normal, double n1, double 
 	return I * n + normal * (n * cos_i - cos_t);
 }
 
-double reflectance(Point origin, Point intersection, Point normal, double n1, double n2) {
+double Raytracer::reflectance(Point origin, Point intersection, Point normal, double n1, double n2) {
 	Point I = (intersection - origin).unitize();
 	double n = n1 / n2;
 	double cos_i = normal.dot(I * -1.0);

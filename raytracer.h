@@ -1,6 +1,5 @@
 #ifndef RAYTRACER_H
 #define RAYTRACER_H
-
 #include "objects.h"
 #include <vector>
 
@@ -8,6 +7,7 @@
 class Raytracer
 {
 public:
+	Scene scene;
     vector<Sphere> spheres;
     vector<Light> lights;
     Raytracer(Scene s);
