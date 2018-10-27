@@ -67,12 +67,11 @@ class Scene
 public:
     int width;
     int height;
-    int camera_z;
     vector<Sphere> spheres;
     vector<Light> lights;
     int bounces;
 	Scene();
-    Scene(int width, int height, int camera_z, vector<Sphere> spheres, vector<Light> lights, int bounces);
+    Scene(int width, int height, vector<Sphere> spheres, vector<Light> lights, int bounces);
 };
 
 #endif

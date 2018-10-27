@@ -1,5 +1,5 @@
-#include "Dependencies\glew-2.1.0\include\GL\glew.h"
-#include "Dependencies\freeglut\include\GL\freeglut.h"
+#include "..\Dependencies\glew-2.1.0\include\GL\glew.h"
+#include "..\Dependencies\freeglut\include\GL\freeglut.h"
 #include <iostream>
 #include <limits>
 #include <ctime>
@@ -18,19 +18,33 @@ void render_pixel(int x, int y, Color c) {
 	glEnd();
 }
 
+void render_sector(Raytracer r) {
+	int width = r.scene.width;
+	int height = r.scene.height;
+	int bounces = r.scene.bounces;
+
+	for (int x = -(width / 2); x < width / 2; x++) {
+		for (int y = -(height / 2); y < height / 2; y++) {
+			Point camera = Point(x, y, -1);
+			Point pixel = Point(x, y, 0);
+			Color fill = r.trace(camera, pixel, bounces);
+			render_pixel(x, y, fill);
+		}
+	}
+}
+
 void render_scene() {
 	Raytracer r = Raytracer(get_scene());
 	int width = r.scene.width;
 	int height = r.scene.height;
-	int camera_z = r.scene.camera_z;
 	int bounces = r.scene.bounces;
 
 	clock_t begin = clock();
 
 	for (int x = -(width / 2); x < width / 2; x++) {
 		for (int y = -(height / 2); y < height / 2; y++) {
-			Point camera = Point(x, y, camera_z - 1);
-			Point pixel = Point(x, y, camera_z);
+			Point camera = Point(x, y, -1);
+			Point pixel = Point(x, y, 0);
 			Color fill = r.trace(camera, pixel, bounces);
 			render_pixel(x, y, fill);
 		}

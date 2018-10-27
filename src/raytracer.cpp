@@ -4,7 +4,7 @@
 #include "raytracer.h"
 #include "main.h"
 
-#define EPSILON .00001 // floating point error compensation
+#define EPSILON .0000001 // floating point error compensation
 
 
 Raytracer::Raytracer(Scene s) {
@@ -56,6 +56,9 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
         double d_light = (light.position - closest_p).mag();
         bool is_blocked = false;
         for (Sphere s : this->spheres) {
+			if (s.n_refractive > 0) {
+				continue;
+			}
             Point shadow = ray_sphere_intersect(closest_p, light.position, s);
             if (shadow.z > 0.0) {
                 double d_closest_p = (closest_p - shadow).mag();
