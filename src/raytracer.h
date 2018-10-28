@@ -16,8 +16,7 @@ public:
     double reflectance(Point origin, Point intersection, Point normal, double n1, double n2);
     Color trace_transparent(Point origin, Point intersection, Point normal, double n_refractive, int bounces_left);
     Color trace(Point origin, Point p, int bounces_left);
-	Color trace_sphere(Point origin, Point intersection, Sphere s, int bounces_left);
-	Color trace_plane(Point origin, Point intersection, Plane p, int bounces_left);
+	Color trace_point(Point origin, Point intersection, Point normal, Properties properties, int bounces_left);
 };
 
 #endif
