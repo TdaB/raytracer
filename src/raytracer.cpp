@@ -15,49 +15,44 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
     if (bounces_left <= 0) {
         return Color(0, 0, 0);
     }
-    Point closest_intersection_s = Point(0, 0, INFINITY);
-	Point closest_intersection_p = Point(0, 0, INFINITY);
-    Sphere closest_s;
-	Plane closest_p;
+    Point closest_intersection = Point(0, 0, INFINITY);
+	Point closest_normal;
+	Properties closest_properties;
     for (Sphere s : this->scene.spheres) {
         Point intersection = ray_sphere_intersect(origin, p, s);
         if (intersection.z > 0) {
-            if (intersection.z < closest_intersection_s.z) {
-                closest_intersection_s = intersection;
-                closest_s = s;
+            if (intersection.z < closest_intersection.z) {
+                closest_intersection = intersection;
+				closest_normal = s.unit_normal(intersection);
+				closest_properties = s.properties;
             }
         }
     }
 	for (Plane plane : this->scene.planes) {
 		Point intersection = ray_plane_intersect(origin, p, plane);
 		if (intersection.z > 0) {
-			if (intersection.z < closest_intersection_p.z) {
-				closest_intersection_p = intersection;
-				closest_p = plane;
+			if (intersection.z < closest_intersection.z) {
+				closest_intersection = intersection;
+				closest_normal = plane.normal;
+				closest_properties = plane.properties;
 			}
 		}
 	}
-    if (closest_intersection_s.z == INFINITY && closest_intersection_p.z == INFINITY) {
+    if (closest_intersection.z == INFINITY) {
         return Color(0,0,0);
     }
-	if (closest_intersection_s.z < closest_intersection_p.z) {
-		return trace_sphere(origin, closest_intersection_s, closest_s, bounces_left);
-	} else {
-		return trace_plane(origin, closest_intersection_p, closest_p, bounces_left);
-	}
+	return trace_point(origin, closest_intersection, closest_normal, closest_properties, bounces_left);
 }
 
-Color Raytracer::trace_sphere(Point origin, Point intersection, Sphere s, int bounces_left) {
-	// Handle clear spheres
-	if (s.n_refractive > 0.0) {
-		return trace_transparent(origin, intersection, s, bounces_left);
+Color Raytracer::trace_point(Point origin, Point intersection, Point normal, Properties properties, int bounces_left) {
+	if (properties.n_refractive > 0.0) {
+		return trace_transparent(origin, intersection, normal, properties.n_refractive, bounces_left);
 	}
-	// Handle opaque spheres
-	Color ambient = s.color * s.k_ambient;
+	Color ambient = properties.color * properties.k_ambient;
 	Color diffuse;
 	Color specular;
 	Color reflective;
-	Point N = s.unit_normal(intersection);
+	Point N = normal;
 	Point V = (origin - intersection).unitize();
 	for (Light light : this->scene.lights) {
 		// Check each light to see if intersection point is blocked from light
@@ -66,7 +61,7 @@ Color Raytracer::trace_sphere(Point origin, Point intersection, Sphere s, int bo
 		double d_light = (light.position - intersection).mag();
 		bool is_blocked = false;
 		for (Sphere s : this->scene.spheres) {
-			if (s.n_refractive > 0) {
+			if (s.properties.n_refractive > 0) {
 				continue;
 			}
 			Point shadow = ray_sphere_intersect(intersection, light.position, s);
@@ -94,94 +89,45 @@ Color Raytracer::trace_sphere(Point origin, Point intersection, Sphere s, int bo
 		if (is_blocked) {
 			continue;
 		}
-		if (s.k_diffuse > 0.0) {
+		if (properties.k_diffuse > 0.0) {
 			// Get diffuse
 			double n_dot_l = N.dot(L);
-			if (n_dot_l > EPSILON) {
-				diffuse = diffuse + s.color * s.k_diffuse * n_dot_l;
+			if (n_dot_l > 0) {
+				diffuse = diffuse + properties.color * properties.k_diffuse * n_dot_l;
 			}
 		}
-		if (s.k_specular > 0.0) {
+		if (properties.k_specular > 0.0) {
 			// Get specular
 			double n_dot_h = N.dot(H);
-			if (n_dot_h > EPSILON) {
-				specular = specular + light.color * s.k_specular * pow(n_dot_h, s.n_specular);
+			if (n_dot_h > 0) {
+				specular = specular + light.color * properties.k_specular * pow(n_dot_h, properties.n_specular);
 			}
 		}
 	}
-	if (s.k_reflective > 0.0) {
+	if (properties.k_reflective > 0.0) {
 		Point R = reflect(origin, intersection, N);
-		reflective = reflective + trace(intersection + N * EPSILON, intersection + R, --bounces_left) * s.k_reflective;
+		// Add N * EPSILON to origin to cure dat acne
+		reflective = reflective + trace(intersection + N * EPSILON, intersection + R, --bounces_left) * properties.k_reflective;
 	}
 	return ambient + diffuse + specular + reflective;
 }
 
-Color Raytracer::trace_plane(Point origin, Point intersection, Plane plane, int bounces_left) {
-	// Handle opaque spheres
-	Color ambient = plane.color * plane.k_ambient;
-	Color diffuse;
-	Color specular;
-	Color reflective;
-	Point V = (origin - intersection).unitize();
-	for (Light light : this->scene.lights) {
-		// Check each light to see if intersection point is blocked from light
-		Point L = (light.position - intersection).unitize();
-		Point H = (V + L).unitize();
-		double d_light = (light.position - intersection).mag();
-		bool is_blocked = false;
-		for (Sphere s : this->scene.spheres) {
-			if (s.n_refractive > 0) {
-				continue;
-			}
-			Point shadow = ray_sphere_intersect(intersection, light.position, s);
-			if (shadow.z > 0.0) {
-				double d_intersection = (intersection - shadow).mag();
-				if (d_light > d_intersection) {
-					is_blocked = true;
-					break;
-				}
-			}
-		}
-		if (!is_blocked) {
-			if (plane.k_diffuse > 0.0) {
-				// Get diffuse
-				double n_dot_l = plane.normal.dot(L);
-				if (n_dot_l > 0) {
-					diffuse = diffuse + plane.color * plane.k_diffuse * n_dot_l;
-				}
-			}
-			if (plane.k_specular > 0.0) {
-				// Get specular
-				double n_dot_h = plane.normal.dot(H);
-				if (n_dot_h > 0) {
-					specular = specular + light.color * plane.k_specular * pow(n_dot_h, plane.n_specular);
-				}
-			}
-		}
-	}
-	if (plane.k_reflective > 0.0) {
-		Point R = reflect(origin, intersection, plane.normal);
-		reflective = reflective + trace(intersection + plane.normal * EPSILON, intersection + R, --bounces_left) * plane.k_reflective;
-	}
-	return ambient + diffuse + specular + reflective;
-}
-
-Color Raytracer::trace_transparent(Point origin, Point intersection, Sphere s, int bounces_left) {
-	Point normal = s.unit_normal(intersection);
+Color Raytracer::trace_transparent(Point origin, Point intersection, Point normal, double n_refractive, int bounces_left) {
+	//Point normal = s.unit_normal(intersection);
 	Point incident = (intersection - origin).unitize();
 	Point reflected;
 	Point refracted;
 	double refl;
 	if (incident.dot(normal) > EPSILON) { // Are we inside a sphere?
 		normal = normal * -1.0;
-		refl = reflectance(origin, intersection, normal, s.n_refractive, 1);
+		refl = reflectance(origin, intersection, normal, n_refractive, 1);
 		reflected = reflect(origin, intersection, normal);
-		refracted = refract(origin, intersection, normal, s.n_refractive, 1);
+		refracted = refract(origin, intersection, normal, n_refractive, 1);
 	}
 	else {
-		refl = reflectance(origin, intersection, normal, 1, s.n_refractive);
+		refl = reflectance(origin, intersection, normal, 1, n_refractive);
 		reflected = reflect(origin, intersection, normal);
-		refracted = refract(origin, intersection, normal, 1, s.n_refractive);
+		refracted = refract(origin, intersection, normal, 1, n_refractive);
 	}
 	if (refl < EPSILON) { // refl == 0
 		return trace(intersection, intersection + refracted, --bounces_left);
@@ -239,6 +185,9 @@ Point Raytracer::ray_plane_intersect(Point p0, Point p1, Plane plane) {
 	}
 	double num = -(plane.normal.dot(p0) + plane.d);
 	double t = num / denom;
+	if (t < EPSILON) {
+		return Point(0, 0, -69);
+	}
 	return p0 + direction * t;
 }
 

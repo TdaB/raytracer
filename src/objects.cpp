@@ -115,20 +115,10 @@ Light::Light(Point p, Color c)
 Sphere::Sphere() {
 }
 
-Sphere::Sphere(
-	Point center, double radius, Color color, 
-	double k_ambient, double k_diffuse, double k_specular,
-	int n_specular, double k_reflective, double n_refractive)
-{
+Sphere::Sphere(Point center, double radius, Properties properties) {
 	this->center = center;
 	this->radius = radius;
-	this->color = color;
-	this->k_ambient = k_ambient;
-	this->k_diffuse = k_diffuse;
-	this->k_specular = k_specular;
-	this->n_specular = n_specular;
-	this->k_reflective = k_reflective;
-	this->n_refractive = n_refractive;
+	this->properties = properties;
 }
 
 Point Sphere::unit_normal(Point p) {
@@ -142,22 +132,13 @@ Point Sphere::unit_normal(Point p) {
 Plane::Plane() {
 }
 
-Plane::Plane(
-	Point p1, Point p2, Point p3, Color color,
-	double k_ambient, double k_diffuse, double k_specular,
-	int n_specular, double k_reflective)
-{
+Plane::Plane(Point p1, Point p2, Point p3, Properties properties) {
 	this->p1 = p1;
 	this->p2 = p2;
 	this->p3 = p3;
 	this->normal = ((p2 - p1) * -1).cross(p3 - p1).unitize();
 	this->d = -this->normal.dot(p1);
-	this->color = color;
-	this->k_ambient = k_ambient;
-	this->k_diffuse = k_diffuse;
-	this->k_specular = k_specular;
-	this->n_specular = n_specular;
-	this->k_reflective = k_reflective;
+	this->properties = properties;
 }
 
 Scene::Scene() {
@@ -195,4 +176,5 @@ Properties::Properties(Color color, double k_ambient, double k_diffuse,
 	this->k_specular = k_specular;
 	this->n_specular = n_specular;
 	this->k_reflective = k_reflective;
+	this->n_refractive = 0.0;
 }

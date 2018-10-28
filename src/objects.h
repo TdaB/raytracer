@@ -42,54 +42,6 @@ public:
 	Light(Point p, Color c);
 };
 
-class Sphere {
-public:
-	Point center;
-	double radius;
-	Color color;
-	double k_ambient, k_diffuse, k_specular, k_reflective, n_refractive;
-	int n_specular;
-	Sphere();
-	Sphere(
-		Point center, double radius, Color color,
-		double k_ambient, double k_diffuse, double k_specular,
-		int n_specular, double k_reflective, double n_refractive
-	);
-	Point unit_normal(Point p);
-};
-
-class Plane {
-public:
-	Point p1;
-	Point p2;
-	Point p3;
-	Point normal;
-	double d;
-	Color color;
-	double k_ambient;
-	double k_diffuse;
-	double k_specular;
-	int n_specular;
-	double k_reflective;
-	Plane();
-	Plane(
-		Point p1, Point p2, Point p3, Color color,
-		double k_ambient, double k_diffuse, double k_specular,
-		int n_specular, double k_reflective);
-};
-
-class Scene {
-public:
-    int width;
-    int height;
-    vector<Sphere> spheres;
-	vector<Plane> planes;
-    vector<Light> lights;
-    int bounces;
-	Scene();
-    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces);
-};
-
 class Properties {
 public:
 	Color color;
@@ -104,6 +56,40 @@ public:
 		Color color, double k_ambient, double k_diffuse,
 		double k_specular, int n_specular, double k_reflective
 	);
+};
+
+class Sphere {
+public:
+	Point center;
+	double radius;
+	Properties properties;
+	Sphere();
+	Sphere(Point center, double radius, Properties properties);
+	Point unit_normal(Point p);
+};
+
+class Plane {
+public:
+	Point p1;
+	Point p2;
+	Point p3;
+	Point normal;
+	double d;
+	Properties properties;
+	Plane();
+	Plane(Point p1, Point p2, Point p3, Properties properties);
+};
+
+class Scene {
+public:
+    int width;
+    int height;
+    vector<Sphere> spheres;
+	vector<Plane> planes;
+    vector<Light> lights;
+    int bounces;
+	Scene();
+    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces);
 };
 
 #endif
