@@ -103,10 +103,7 @@ bool Point::operator == (const Point &p)
 	return this->x == p.x && this->y == p.y && this->z == p.z;
 }
 
-Light::Light() 
-{
-	this->position = Point();
-	this->color = Color();
+Light::Light() {
 }
 
 Light::Light(Point p, Color c) 
@@ -115,19 +112,13 @@ Light::Light(Point p, Color c)
 	this->color = c;
 }
 
-Sphere::Sphere()
-{
-	this->center = Point();
-	this->radius = 0;
-	this->color = Color();
-	this->k_ambient = this->k_diffuse = this->k_specular = this->k_reflective = this->n_refractive = 0.0;
-	this->n_specular = 0;
+Sphere::Sphere() {
 }
 
 Sphere::Sphere(
 	Point center, double radius, Color color, 
 	double k_ambient, double k_diffuse, double k_specular,
-	double k_reflective, int n_specular, double n_refractive)
+	int n_specular, double k_reflective, double n_refractive)
 {
 	this->center = center;
 	this->radius = radius;
@@ -135,8 +126,8 @@ Sphere::Sphere(
 	this->k_ambient = k_ambient;
 	this->k_diffuse = k_diffuse;
 	this->k_specular = k_specular;
-	this->k_reflective = k_reflective;
 	this->n_specular = n_specular;
+	this->k_reflective = k_reflective;
 	this->n_refractive = n_refractive;
 }
 
@@ -148,13 +139,60 @@ Point Sphere::unit_normal(Point p) {
 	);
 }
 
+Plane::Plane() {
+}
+
+Plane::Plane(
+	Point p1, Point p2, Point p3, Color color,
+	double k_ambient, double k_diffuse, double k_specular,
+	int n_specular, double k_reflective)
+{
+	this->p1 = p1;
+	this->p2 = p2;
+	this->p3 = p3;
+	this->normal = ((p2 - p1) * -1).cross(p3 - p1).unitize();
+	this->d = -this->normal.dot(p1);
+	this->color = color;
+	this->k_ambient = k_ambient;
+	this->k_diffuse = k_diffuse;
+	this->k_specular = k_specular;
+	this->n_specular = n_specular;
+	this->k_reflective = k_reflective;
+}
+
 Scene::Scene() {
 }
 
-Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Light> lights, int bounces) {
+Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces) {
     this->width = width;
     this->height = height;
     this->spheres = spheres;
+	this->planes = planes;
     this->lights = lights;
     this->bounces = bounces;
+}
+
+Properties::Properties() {
+}
+
+Properties::Properties(Color color, double k_ambient, double k_diffuse, double k_specular,
+	int n_specular, double k_reflective, double n_refractive) 
+{
+	this->color = color;
+	this->k_ambient = k_ambient;
+	this->k_diffuse = k_diffuse;
+	this->k_specular = k_specular;
+	this->n_specular = n_specular;
+	this->k_reflective = k_reflective;
+	this->n_refractive = n_refractive;
+}
+Properties::Properties(Color color, double k_ambient, double k_diffuse,
+	double k_specular, int n_specular, double k_reflective)
+{
+	this->color = color;
+	this->k_ambient = k_ambient;
+	this->k_diffuse = k_diffuse;
+	this->k_specular = k_specular;
+	this->n_specular = n_specular;
+	this->k_reflective = k_reflective;
 }

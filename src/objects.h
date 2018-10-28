@@ -5,8 +5,7 @@
 using namespace std;
 
 
-class Color
-{
+class Color {
 public:
 	double r, g, b;
 	Color();
@@ -18,8 +17,7 @@ public:
 	bool operator != (const Color &c);
 };
 
-class Point
-{
+class Point {
 public:
 	double x, y, z;
 	Point();
@@ -36,8 +34,7 @@ public:
 	bool operator == (const Point &p);
 };
 
-class Light
-{
+class Light {
 public:
 	Point position;
 	Color color;
@@ -45,8 +42,7 @@ public:
 	Light(Point p, Color c);
 };
 
-class Sphere
-{
+class Sphere {
 public:
 	Point center;
 	double radius;
@@ -57,21 +53,57 @@ public:
 	Sphere(
 		Point center, double radius, Color color,
 		double k_ambient, double k_diffuse, double k_specular,
-		double k_reflective, int n_specular, double n_refractive
+		int n_specular, double k_reflective, double n_refractive
 	);
 	Point unit_normal(Point p);
 };
 
-class Scene
-{
+class Plane {
+public:
+	Point p1;
+	Point p2;
+	Point p3;
+	Point normal;
+	double d;
+	Color color;
+	double k_ambient;
+	double k_diffuse;
+	double k_specular;
+	int n_specular;
+	double k_reflective;
+	Plane();
+	Plane(
+		Point p1, Point p2, Point p3, Color color,
+		double k_ambient, double k_diffuse, double k_specular,
+		int n_specular, double k_reflective);
+};
+
+class Scene {
 public:
     int width;
     int height;
     vector<Sphere> spheres;
+	vector<Plane> planes;
     vector<Light> lights;
     int bounces;
 	Scene();
-    Scene(int width, int height, vector<Sphere> spheres, vector<Light> lights, int bounces);
+    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces);
+};
+
+class Properties {
+public:
+	Color color;
+	double k_ambient, k_diffuse, k_specular, k_reflective, n_refractive;
+	int n_specular;
+	Properties();
+	Properties(
+		Color color, double k_ambient, double k_diffuse, double k_specular,
+		int n_specular, double k_reflective, double n_refractive
+	);
+	Properties(
+		Color color, double k_ambient, double k_diffuse,
+		double k_specular, int n_specular, double k_reflective
+	);
 };
 
 #endif
