@@ -171,7 +171,7 @@ Plane::Plane(Point p1, Point p2, Point p3, Properties properties) {
 Scene::Scene() {
 }
 
-Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces) {
+Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces, double n_refractive) {
     this->width = width;
     this->height = height;
     this->spheres = spheres;
@@ -179,6 +179,7 @@ Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes
 	this->triangles = triangles;
     this->lights = lights;
     this->bounces = bounces;
+	this->n_refractive = n_refractive;
 }
 
 Properties::Properties() {

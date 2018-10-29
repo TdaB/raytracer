@@ -20,32 +20,26 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
 	Properties closest_properties;
     for (Sphere s : this->scene.spheres) {
         Point intersection = ray_sphere_intersect(origin, p, s);
-        if (intersection.z > 0) {
-            if (intersection.z < closest_intersection.z) {
-                closest_intersection = intersection;
-				closest_normal = s.unit_normal(intersection);
-				closest_properties = s.properties;
-            }
+        if (intersection.z != INFINITY && intersection.z < closest_intersection.z) {
+            closest_intersection = intersection;
+			closest_normal = s.unit_normal(intersection);
+			closest_properties = s.properties;
         }
     }
 	for (Plane plane : this->scene.planes) {
 		Point intersection = ray_plane_intersect(origin, p, plane);
-		if (intersection.z > 0) {
-			if (intersection.z < closest_intersection.z) {
-				closest_intersection = intersection;
-				closest_normal = plane.normal;
-				closest_properties = plane.properties;
-			}
+		if (intersection.z != INFINITY && intersection.z < closest_intersection.z) {
+			closest_intersection = intersection;
+			closest_normal = plane.normal;
+			closest_properties = plane.properties;
 		}
 	}
 	for (Triangle t : this->scene.triangles) {
 		Point intersection = ray_triangle_intersect(origin, p, t);
-		if (intersection.z > 0) {
-			if (intersection.z < closest_intersection.z) {
-				closest_intersection = intersection;
-				closest_normal = t.normal;
-				closest_properties = t.properties;
-			}
+		if (intersection.z != INFINITY && intersection.z < closest_intersection.z) {
+			closest_intersection = intersection;
+			closest_normal = t.normal;
+			closest_properties = t.properties;
 		}
 	}
     if (closest_intersection.z == INFINITY) {
@@ -130,21 +124,35 @@ bool Raytracer::light_blocked(Light light, Point p) {
 }
 
 Color Raytracer::trace_transparent(Point origin, Point intersection, Point normal, double n_refractive, int bounces_left) {
-	//Point normal = s.unit_normal(intersection);
 	Point incident = (intersection - origin).unitize();
 	Point reflected;
 	Point refracted;
 	double refl;
+	Point V = (origin - intersection).unitize();
 	if (incident.dot(normal) > EPSILON) { // Are we inside a sphere?
 		normal = normal * -1.0;
-		refl = reflectance(origin, intersection, normal, n_refractive, 1);
-		reflected = reflect(origin, intersection, normal);
-		refracted = refract(origin, intersection, normal, n_refractive, 1);
+		double n_dot_v = normal.dot(V);
+		double n_ratio = n_refractive / this->scene.n_refractive;
+		if ((n_ratio * n_ratio) * (1 - (n_dot_v * n_dot_v)) > 1) {
+			refl = 1;
+			reflected = reflect(origin, intersection, normal);
+		} else {
+			refl = reflectance(origin, intersection, normal, n_refractive, this->scene.n_refractive);
+			reflected = reflect(origin, intersection, normal);
+			refracted = refract(origin, intersection, normal, n_refractive, this->scene.n_refractive);
+		}
 	}
 	else {
-		refl = reflectance(origin, intersection, normal, 1, n_refractive);
-		reflected = reflect(origin, intersection, normal);
-		refracted = refract(origin, intersection, normal, 1, n_refractive);
+		double n_dot_v = normal.dot(V);
+		double n_ratio = n_refractive / this->scene.n_refractive;
+		if ((n_ratio * n_ratio) * (1 - (n_dot_v * n_dot_v)) > 1) {
+			refl = 1;
+			reflected = reflect(origin, intersection, normal);
+		} else {
+			refl = reflectance(origin, intersection, normal, this->scene.n_refractive, n_refractive);
+			reflected = reflect(origin, intersection, normal);
+			refracted = refract(origin, intersection, normal, this->scene.n_refractive, n_refractive);
+		}
 	}
 	if (refl < EPSILON) { // refl == 0
 		return trace(intersection, intersection + refracted, --bounces_left);
@@ -160,11 +168,9 @@ Color Raytracer::trace_transparent(Point origin, Point intersection, Point norma
 
 Point Raytracer::ray_sphere_intersect(Point p0, Point p1, Sphere s) {
 	Point center = s.center;
-
 	double dx = p1.x - p0.x;
 	double dy = p1.y - p0.y;
 	double dz = p1.z - p0.z;
-
 	double a = dx * dx + dy * dy + dz * dz;
 	double b =
 		2 * dx * (p0.x - center.x) +
@@ -177,19 +183,17 @@ Point Raytracer::ray_sphere_intersect(Point p0, Point p1, Sphere s) {
 		p0.x * p0.x + p0.y * p0.y + p0.z * p0.z +
 		-2 * (center.x * p0.x + center.y * p0.y + center.z * p0.z) -
 		s.radius * s.radius;
-
 	double disc = b * b - 4 * a * c;
 	double t;
-
 	if (disc < 0.0) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	t = (-b - sqrt(disc)) / (2.0 * a);
 	if (t < EPSILON) {
 		t = (-b + sqrt(disc)) / (2.0 * a);
 	}
 	if (t < EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	return Point(p0.x + t * dx, p0.y + t * dy, p0.z + t * dz);
 }
@@ -198,12 +202,12 @@ Point Raytracer::ray_plane_intersect(Point p0, Point p1, Plane plane) {
 	Point direction = (p1 - p0).unitize();
 	double denom = plane.normal.dot(direction);
 	if (denom <= 0  && denom > -EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	double num = -(plane.normal.dot(p0) + plane.d);
 	double t = num / denom;
 	if (t < EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	return p0 + direction * t;
 }
@@ -212,18 +216,18 @@ Point Raytracer::ray_triangle_intersect(Point p0, Point p1, Triangle triangle) {
 	Point direction = (p1 - p0).unitize();
 	double denom = triangle.normal.dot(direction);
 	if (denom <= 0 && denom > -EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	double num = -(triangle.normal.dot(p0) + triangle.d);
 	double t = num / denom;
 	if (t < EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	Point intersection = p0 + direction * t;
 	if (triangle.contains_point(intersection)) {
 		return intersection;
 	}
-	return Point(0, 0, -69);
+	return Point(0, 0, INFINITY);
 }
 
 Point Raytracer::reflect(Point origin, Point intersection, Point normal) {
@@ -238,7 +242,7 @@ Point Raytracer::refract(Point origin, Point intersection, Point normal, double 
 	double cos_i = normal.dot(I * -1.0);
 	double sin_t_2 = n * n * (1.0 - cos_i * cos_i);
 	if (sin_t_2 > 1.0 - EPSILON) {
-		return Point(0, 0, -69);
+		return Point(0, 0, INFINITY);
 	}
 	double cos_t = sqrt(1.0 - sin_t_2);
 	return I * n + normal * (n * cos_i - cos_t);

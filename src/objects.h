@@ -102,8 +102,9 @@ public:
 	vector<Triangle> triangles;
     vector<Light> lights;
     int bounces;
+	double n_refractive;
 	Scene();
-    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces);
+    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces, double n_refractive);
 };
 
 #endif
