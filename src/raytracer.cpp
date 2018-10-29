@@ -38,6 +38,16 @@ Color Raytracer::trace(Point origin, Point p, int bounces_left) {
 			}
 		}
 	}
+	for (Triangle t : this->scene.triangles) {
+		Point intersection = ray_triangle_intersect(origin, p, t);
+		if (intersection.z > 0) {
+			if (intersection.z < closest_intersection.z) {
+				closest_intersection = intersection;
+				closest_normal = t.normal;
+				closest_properties = t.properties;
+			}
+		}
+	}
     if (closest_intersection.z == INFINITY) {
         return Color(0,0,0);
     }
@@ -58,35 +68,7 @@ Color Raytracer::trace_point(Point origin, Point intersection, Point normal, Pro
 		// Check each light to see if intersection point is blocked from light
 		Point L = (light.position - intersection).unitize();
 		Point H = (V + L).unitize();
-		double d_light = (light.position - intersection).mag();
-		bool is_blocked = false;
-		for (Sphere s : this->scene.spheres) {
-			if (s.properties.n_refractive > 0) {
-				continue;
-			}
-			Point shadow = ray_sphere_intersect(intersection, light.position, s);
-			if (shadow.z > 0.0) {
-				double d_intersection = (intersection - shadow).mag();
-				if (d_light > d_intersection) {
-					is_blocked = true;
-					break;
-				}
-			}
-		}
-		if (is_blocked) {
-			continue;
-		}
-		for (Plane p : this->scene.planes) {
-			Point shadow = ray_plane_intersect(intersection, light.position, p);
-			if (shadow.z > 0.0) {
-				double d_intersection = (intersection - shadow).mag();
-				if (d_light > d_intersection) {
-					is_blocked = true;
-					break;
-				}
-			}
-		}
-		if (is_blocked) {
+		if (light_blocked(light, intersection)) {
 			continue;
 		}
 		if (properties.k_diffuse > 0.0) {
@@ -110,6 +92,41 @@ Color Raytracer::trace_point(Point origin, Point intersection, Point normal, Pro
 		reflective = reflective + trace(intersection + N * EPSILON, intersection + R, --bounces_left) * properties.k_reflective;
 	}
 	return ambient + diffuse + specular + reflective;
+}
+
+bool Raytracer::light_blocked(Light light, Point p) {
+	double d_light = (light.position - p).mag();
+	for (Sphere s : this->scene.spheres) {
+		if (s.properties.n_refractive > 0) {
+			continue;
+		}
+		Point shadow = ray_sphere_intersect(p, light.position, s);
+		if (shadow.z > 0.0) {
+			double d_intersection = (p - shadow).mag();
+			if (d_light > d_intersection) {
+				return true;
+			}
+		}
+	}
+	for (Plane plane : this->scene.planes) {
+		Point shadow = ray_plane_intersect(p, light.position, plane);
+		if (shadow.z > 0.0) {
+			double d_intersection = (p - shadow).mag();
+			if (d_light > d_intersection) {
+				return true;
+			}
+		}
+	}
+	for (Triangle t : this->scene.triangles) {
+		Point shadow = ray_triangle_intersect(p, light.position, t);
+		if (shadow.z > 0.0) {
+			double d_intersection = (p - shadow).mag();
+			if (d_light > d_intersection) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 Color Raytracer::trace_transparent(Point origin, Point intersection, Point normal, double n_refractive, int bounces_left) {
@@ -189,6 +206,24 @@ Point Raytracer::ray_plane_intersect(Point p0, Point p1, Plane plane) {
 		return Point(0, 0, -69);
 	}
 	return p0 + direction * t;
+}
+
+Point Raytracer::ray_triangle_intersect(Point p0, Point p1, Triangle triangle) {
+	Point direction = (p1 - p0).unitize();
+	double denom = triangle.normal.dot(direction);
+	if (denom <= 0 && denom > -EPSILON) {
+		return Point(0, 0, -69);
+	}
+	double num = -(triangle.normal.dot(p0) + triangle.d);
+	double t = num / denom;
+	if (t < EPSILON) {
+		return Point(0, 0, -69);
+	}
+	Point intersection = p0 + direction * t;
+	if (triangle.contains_point(intersection)) {
+		return intersection;
+	}
+	return Point(0, 0, -69);
 }
 
 Point Raytracer::reflect(Point origin, Point intersection, Point normal) {

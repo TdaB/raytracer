@@ -20,10 +20,11 @@ Scene scene1() {
     };
 
 	vector<Plane> planes;
+	vector<Triangle> triangles;
     
     int bounces = 15;
     
-    return Scene(width, height, spheres, planes, lights, bounces);
+    return Scene(width, height, spheres, planes, triangles, lights, bounces);
 }
 
 Scene scene2() {
@@ -49,10 +50,11 @@ Scene scene2() {
     };
 
 	vector<Plane> planes;
+	vector<Triangle> triangles;
     
     int bounces = 15;
     
-    return Scene(width, height, spheres, planes, lights, bounces);
+    return Scene(width, height, spheres, planes, triangles, lights, bounces);
 }
 
 Scene scene3() {
@@ -68,12 +70,36 @@ Scene scene3() {
 	vector<Plane> planes = {
 		Plane(Point(-100, 100, 1000), Point(-100, -100, 1300), Point(100, 0, 1500), Properties(Color(1, 0, 1), .01, .5, 0, 40, 0))
 	};
+	vector<Triangle> triangles;
+
 
 	int bounces = 10;
 
-	return Scene(width, height, spheres, planes, lights, bounces);
+	return Scene(width, height, spheres, planes, triangles, lights, bounces);
+}
+
+Scene scene4() {
+	int width = 300;
+	int height = 300;
+
+	vector<Light> lights = {
+		Light(Point(0, 0, 900), Color(1, 1, 1)),
+	};
+
+	vector<Sphere> spheres = {
+		Sphere(Point(0, 0, 3500), 100, Properties(Color(1, 0, 0), .01, .5, .5, 40, .9, 0)),
+	};
+
+	vector<Triangle> triangles = {
+		Triangle(Point(-100, 100, 1000), Point(-100, -100, 1300), Point(100, 0, 3000), Properties(Color(1, 0, 1), .01, .5, 0, 40, 0))
+	};
+	vector<Plane> planes;
+
+	int bounces = 10;
+
+	return Scene(width, height, spheres, planes, triangles, lights, bounces);
 }
 
 Scene get_scene() {
-	return scene3();
+	return scene4();
 }

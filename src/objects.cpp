@@ -3,6 +3,8 @@
 #include <vector>
 #include "objects.h"
 
+#define EPSILON .0000001 // floating point error compensation
+
 
 Color::Color()
 {
@@ -129,10 +131,10 @@ Point Sphere::unit_normal(Point p) {
 	);
 }
 
-Plane::Plane() {
+Triangle::Triangle() {
 }
 
-Plane::Plane(Point p1, Point p2, Point p3, Properties properties) {
+Triangle::Triangle(Point p1, Point p2, Point p3, Properties properties) {
 	this->p1 = p1;
 	this->p2 = p2;
 	this->p3 = p3;
@@ -141,14 +143,40 @@ Plane::Plane(Point p1, Point p2, Point p3, Properties properties) {
 	this->properties = properties;
 }
 
+bool Triangle::contains_point(Point p) {
+	if ((this->p1 - this->p2).cross(p - this->p1).dot(this->normal) < EPSILON) {
+		return false;
+	}
+	if ((this->p2 - this->p3).cross(p - this->p2).dot(this->normal) < EPSILON) {
+		return false;
+	}
+	if ((this->p3 - this->p1).cross(p - this->p3).dot(this->normal) < EPSILON) {
+		return false;
+	}
+	return true;
+}
+
+Plane::Plane() {
+}
+
+Plane::Plane(Point p1, Point p2, Point p3, Properties properties) {
+	this->p1 = p1;
+	this->p2 = p2;
+	this->p3 = p3;
+	this->normal = (p1 - p2).cross(p3 - p1).unitize();
+	this->d = -this->normal.dot(p1);
+	this->properties = properties;
+}
+
 Scene::Scene() {
 }
 
-Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces) {
+Scene::Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces) {
     this->width = width;
     this->height = height;
     this->spheres = spheres;
 	this->planes = planes;
+	this->triangles = triangles;
     this->lights = lights;
     this->bounces = bounces;
 }

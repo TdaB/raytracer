@@ -80,16 +80,30 @@ public:
 	Plane(Point p1, Point p2, Point p3, Properties properties);
 };
 
+class Triangle {
+public:
+	Point p1;
+	Point p2;
+	Point p3;
+	Point normal;
+	double d;
+	Properties properties;
+	Triangle();
+	Triangle(Point p1, Point p2, Point p3, Properties properties);
+	bool contains_point(Point p);
+};
+
 class Scene {
 public:
     int width;
     int height;
     vector<Sphere> spheres;
 	vector<Plane> planes;
+	vector<Triangle> triangles;
     vector<Light> lights;
     int bounces;
 	Scene();
-    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Light> lights, int bounces);
+    Scene(int width, int height, vector<Sphere> spheres, vector<Plane> planes, vector<Triangle> triangles, vector<Light> lights, int bounces);
 };
 
 #endif
